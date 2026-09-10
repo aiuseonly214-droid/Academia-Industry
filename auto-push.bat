@@ -25,9 +25,18 @@ echo Remote URL     : %REMOTE_URL%
 echo.
 
 :: Check commit message from command line argument
-set "MSG=%~1"
+set "MSG="
+if not "%~1"=="" if not "%~1"=="--no-pause" set "MSG=%~1"
+if not "%~2"=="" if not "%~2"=="--no-pause" set "MSG=%~2"
+
 if "%MSG%"=="" (
-    set /p "MSG=Enter commit message (Press Enter for auto timestamp): "
+    if "%~1"=="--no-pause" (
+        set "MSG=Auto update: %date% %time%"
+    ) else if "%~2"=="--no-pause" (
+        set "MSG=Auto update: %date% %time%"
+    ) else (
+        set /p "MSG=Enter commit message (Press Enter for auto timestamp): "
+    )
 )
 
 if "%MSG%"=="" (
