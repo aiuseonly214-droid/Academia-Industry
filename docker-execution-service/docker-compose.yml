@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: practice
+      POSTGRES_USER: practice
+      POSTGRES_PASSWORD: practice
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks: [practice]
+
+  executor:
+    build: .
+    environment:
+      PORT: 8080
+      POSTGRES_URL: postgres://practice:practice@postgres:5432/practice
+      SERVICE_TOKEN: change-this-before-deploying
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8080"
+    depends_on: [postgres]
+    networks: [practice]
+
+networks:
+  practice:
+    driver: bridge
