@@ -30,7 +30,7 @@ export default function CompanyDashboard({ onExit }: { onExit: () => void }) {
 
   useEffect(() => {
     if (profile) {
-      supabase.from('internships').select('*').eq('profile_id', profile.id).then(({ data, error }) => {
+      supabase.from('internships').select('*').eq('profile_id', profile.id).then(({ data, error }: { data: any; error: any }) => {
         if (error) {
           setToast('Failed to load internships');
         }
@@ -45,7 +45,7 @@ export default function CompanyDashboard({ onExit }: { onExit: () => void }) {
   else if (activeView === 'Candidates') currentPage = <CandidatesView onToast={setToast} />;
   else if (activeView === 'Internships') currentPage = <InternshipsView onToast={setToast} internships={internships} profileId={profile?.id || ''} companyName={orgName} onRefresh={() => {
     if (profile) {
-      supabase.from('internships').select('*').eq('profile_id', profile.id).then(({ data, error }) => {
+      supabase.from('internships').select('*').eq('profile_id', profile.id).then(({ data, error }: { data: any; error: any }) => {
         if (error) setToast('Failed to refresh internships');
         setInternships((data as Internship[]) || []);
       });

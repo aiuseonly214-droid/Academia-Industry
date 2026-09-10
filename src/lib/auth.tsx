@@ -2,9 +2,10 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { supabase } from './supabase';
 import type { Profile, UserRole, Skill, RoadmapStep, Task, AssessmentRecord, ProjectRecord, Internship, Application } from './types';
 import {
-  DEMO_STUDENT_PHONE, DEMO_COMPANY_PHONE, DEMO_COLLEGE_PHONE, DEMO_OTP,
+  DEMO_OTP,
   demoSkills, demoRoadmap, demoTasks, demoAssessments, demoProjects, demoInternships,
 } from './demo-data';
+
 
 interface AuthState {
   profile: Profile | null;
@@ -34,11 +35,49 @@ function normalizePhone(phone: string): string {
   return phone.replace(/\s/g, '');
 }
 
-function getDemoProfile(role: UserRole): { name: string; org: string | null; phone: string } {
-  if (role === 'student') return { name: 'Pratik Lohar', org: null, phone: DEMO_STUDENT_PHONE };
-  if (role === 'company') return { name: 'Aisha Khan', org: 'Nova Analytics', phone: DEMO_COMPANY_PHONE };
-  return { name: 'Dr. Mehta', org: 'Fergusson College', phone: DEMO_COLLEGE_PHONE };
-}
+/** Fixed demo profile IDs that match the pre-seeded localStorage store */
+const DEMO_PROFILE_IDS: Record<UserRole, string> = {
+  student: 'student-demo-id',
+  company: 'company-demo-id',
+  college: 'college-demo-id',
+};
+
+/** Hardcoded fallback profiles in case localStorage was cleared */
+const DEMO_FALLBACK_PROFILES: Record<UserRole, Profile> = {
+  student: {
+    id: 'student-demo-id',
+    phone: '+919876543210',
+    full_name: 'Pratik Lohar',
+    role: 'student',
+    organization: 'Fergusson College, Pune',
+    is_demo: true,
+    email: 'pratik.lohar@example.edu',
+    last_login: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  } as Profile,
+  company: {
+    id: 'company-demo-id',
+    phone: '+919876511111',
+    full_name: 'Aisha Khan',
+    role: 'company',
+    organization: 'Nova Analytics',
+    is_demo: true,
+    email: 'aisha.khan@novaanalytics.com',
+    last_login: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  } as Profile,
+  college: {
+    id: 'college-demo-id',
+    phone: '+919876522222',
+    full_name: 'Dr. Mehta',
+    role: 'college',
+    organization: 'Fergusson College',
+    is_demo: true,
+    email: 'dean.placement@fergusson.edu',
+    last_login: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  } as Profile,
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
@@ -125,25 +164,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .update({ last_login: new Date().toISOString() })
         .eq('id', profile.id);
     } else {
-      const demo = getDemoProfile(role);
+      const demoInfo = DEMO_FALLBACK_PROFILES[role] ?? DEMO_FALLBACK_PROFILES.student;
       const insertData = {
         phone: normalized,
-        full_name: demo.name,
+        full_name: demoInfo.full_name,
         role,
-        organization: demo.org,
+        organization: demoInfo.organization ?? null,
         is_demo: true,
         email: null,
         last_login: new Date().toISOString(),
       };
-      const { data: created, error: insertErr } = await supabase
-        .from('profiles')
-        .insert(insertData)
-        .select()
-        .single();
+      // insert returns the created record directly from LocalQueryBuilder
+      const result = await supabase.from('profiles').insert(insertData);
+      const insertErr = result?.error;
       if (insertErr) {
         setState((s) => ({ ...s, error: insertErr.message }));
         throw insertErr;
       }
+      // result.data is the created record (or array)
+      const created = Array.isArray(result.data) ? result.data[0] : result.data;
       profile = created as Profile;
       await seedDemoData(profile.id, role);
     }
@@ -160,46 +199,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }));
   }
 
-  async function loginDemo(role: UserRole): Promise<void> {
-    const demo = getDemoProfile(role);
-    const normalized = normalizePhone(demo.phone);
 
-    const { data: existing, error: lookupErr } = await supabase
+  async function loginDemo(role: UserRole): Promise<void> {
+    // Look up by the known fixed ID — never by phone, never insert
+    const profileId = DEMO_PROFILE_IDS[role];
+
+    const { data: existing } = await supabase
       .from('profiles')
       .select('*')
-      .eq('phone', normalized)
+      .eq('id', profileId)
       .maybeSingle();
-    if (lookupErr) {
-      setState((s) => ({ ...s, error: lookupErr.message, loading: false }));
-      throw lookupErr;
-    }
 
-    let profile: Profile;
+    // Use found profile, or fall back to hardcoded object (handles cleared localStorage)
+    const profile: Profile = (existing as Profile) ?? DEMO_FALLBACK_PROFILES[role];
 
-    if (existing) {
-      profile = existing as Profile;
-      await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', profile.id);
-    } else {
-      const insertData = {
-        phone: normalized,
-        full_name: demo.name,
-        role,
-        organization: demo.org,
-        is_demo: true,
-        email: null,
-        last_login: new Date().toISOString(),
-      };
-      const { data: created, error: insertErr } = await supabase.from('profiles').insert(insertData).select().single();
-      if (insertErr) {
-        setState((s) => ({ ...s, error: insertErr.message, loading: false }));
-        throw insertErr;
-      }
-      profile = created as Profile;
-      await seedDemoData(profile.id, role);
-    }
-
+    // Persist session and update last_login silently
     localStorage.setItem(SESSION_KEY, profile.id);
-    setState((s) => ({ ...s, profile, loading: false }));
+    await supabase
+      .from('profiles')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', profile.id);
+
+    setState((s) => ({ ...s, profile, loading: false, error: null }));
   }
 
   async function seedDemoData(profileId: string, role: UserRole) {
