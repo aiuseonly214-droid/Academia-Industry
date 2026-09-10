@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "git:push": "auto-push.bat --no-pause",
+    "git:pull": "auto-pull.bat --no-pause",
+    "git:sync": "auto-sync.bat --no-pause"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
