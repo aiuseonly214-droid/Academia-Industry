@@ -1,0 +1,534 @@
+# Product Requirements Document
+
+## Product
+
+**Academia–Industry Collaboration Portal**
+
+**Repository:** `aiuseonly214-droid/Academia-Industry`
+**Version:** 1.0
+**Status:** Draft / implementation-aligned
+**Last updated:** 2026-09-19
+
+---
+
+## 1. Executive Summary
+
+The Academia–Industry Collaboration Portal bridges the gap between academic learning and industry hiring requirements. It helps students understand the skills expected for target careers, identify gaps, follow a personalized learning plan, practice technical skills in browser-based environments, prove their abilities through assessments, build an ATS-friendly resume, and discover relevant internships.
+
+The platform also gives colleges visibility into student readiness and gives companies a way to define opportunities, search for qualified candidates, and evaluate evidence-backed skills.
+
+### Product vision
+
+> **Learn → Practice → Prove → Connect → Get Hired**
+
+### Primary outcome
+
+Increase the number of students who can demonstrate job-relevant, verified skills and connect those skills to internships and placement opportunities.
+
+---
+
+## 2. Problem Statement
+
+Students frequently have difficulty answering:
+
+- Which skills are required for their intended career?
+- Which skills are missing or weak in their current profile?
+- What should they learn next, and in what order?
+- How much time is required to become internship-ready?
+- Where can they practice without configuring local development environments?
+- How can they prove that they possess a skill rather than simply claiming it?
+- How can they create a resume that reflects their actual capabilities?
+- Which internships and companies are a realistic fit?
+
+Colleges need actionable skill and readiness analytics, while companies need a reliable way to discover candidates based on evidence rather than only degrees or self-reported skills.
+
+---
+
+## 3. Goals and Success Criteria
+
+### 3.1 Goals
+
+1. Provide role-based experiences for students, colleges, and companies.
+2. Turn a student's profile and career goal into an understandable skill-gap view.
+3. Convert skill gaps into a practical, trackable learning roadmap.
+4. Provide safe browser-based practice for SQL/PostgreSQL and Python.
+5. Assess practical and conceptual knowledge and produce verified skill evidence.
+6. Generate an ATS-friendly resume from profile, education, projects, and verified skills.
+7. Help companies discover and shortlist candidates for internships.
+8. Help colleges monitor student progress, skill gaps, readiness, and placement outcomes.
+9. Protect user data and isolate untrusted code execution.
+
+### 3.2 Success metrics
+
+Initial product metrics should include:
+
+- Percentage of registered students completing a profile.
+- Percentage of students selecting a career goal.
+- Percentage of students starting and completing a roadmap.
+- Weekly active students and learning-task completion rate.
+- Practical lab execution success rate and median execution time.
+- Assessment completion rate and average score.
+- Number of verified skills per active student.
+- Number of generated resumes and completed skill passports.
+- Internship application and shortlist rates.
+- College dashboard adoption and company opportunity creation.
+- Critical security incidents and unsafe execution attempts: target zero.
+
+---
+
+## 4. Users and Roles
+
+### 4.1 Student
+
+The primary user. Creates a profile, selects a career goal, reviews skill gaps, follows a roadmap, completes tasks, uses practical labs, takes assessments, earns verified skills, generates a resume, and applies for internships.
+
+### 4.2 College administrator or faculty member
+
+Monitors student progress and readiness at institution level, identifies common industry skill gaps, and reviews placement-related analytics.
+
+### 4.3 Company recruiter
+
+Creates internship opportunities, defines required skills, searches candidates, reviews verified evidence and skill passports, and manages applications and shortlists.
+
+### 4.4 Platform administrator
+
+Manages role access, platform configuration, content quality, execution-service health, moderation, and operational support. This role is required for production even if it is not yet exposed in the current UI.
+
+---
+
+## 5. Product Scope
+
+### 5.1 Authentication and onboarding
+
+- Support phone-number and OTP-based authentication where configured.
+- Create a user profile with a platform role.
+- Allow role selection for student, college, or company experiences.
+- Enforce role-based access to dashboards and data.
+- Handle sign-in, sign-out, session persistence, and unauthorized access states.
+- Validate profile data before it is used for recommendations or matching.
+
+### 5.2 Student profile
+
+Students should be able to manage:
+
+- Name and contact information.
+- Education, institution, degree, branch, and graduation details.
+- Career goal and target role.
+- Self-reported skills and proficiency levels.
+- Projects, certifications, achievements, and internships.
+- Learning preferences and available study time.
+
+The profile must distinguish self-reported skills from verified skills.
+
+### 5.3 Skill mapping and gap analysis
+
+The system shall:
+
+- Represent skills required by target roles and opportunities.
+- Compare student profile skills with target requirements.
+- Classify skills as missing, weak, developing, or demonstrated/verified.
+- Show a clear explanation of why a gap exists.
+- Prioritize gaps by career relevance and learning dependency.
+- Refresh the analysis when the profile, assessment results, or target role changes.
+
+### 5.4 Personalized learning roadmap
+
+The roadmap shall provide:
+
+- Ordered skills and topics to learn.
+- Estimated effort in hours and days.
+- A daily or weekly study plan.
+- Practical exercises and assessments.
+- Recommended resources, including videos, notes, and learning materials.
+- Progress indicators and completion states.
+- The ability to resume work from the last incomplete task.
+
+Recommendations must be explainable enough for a student to understand the next action.
+
+### 5.5 Smart task management
+
+The system shall convert roadmap items into actionable tasks, such as:
+
+- Watch or read a learning resource.
+- Review topic notes.
+- Complete a practical exercise.
+- Submit an assessment.
+- Add or improve a project.
+
+Students shall be able to mark tasks complete, see daily progress, and view overdue or upcoming tasks. Task completion must update roadmap progress consistently.
+
+### 5.6 Practical Hub
+
+The initial release shall support SQL/PostgreSQL and Python practice directly in the browser.
+
+#### SQL lab requirements
+
+- Display the practice database and available tables where appropriate.
+- Accept SQL statements from the student.
+- Execute supported statements against an isolated practice database.
+- Return query results, errors, and execution status.
+- Provide practice problems and expected outcomes.
+- Allow solution submission and record attempts.
+
+#### Python lab requirements
+
+- Provide a code editor or code-entry experience.
+- Execute Python in an isolated environment.
+- Return standard output, errors, and execution status.
+- Provide programming problems and submission flows.
+- Record attempts and relevant completion evidence.
+
+#### Execution safety requirements
+
+All user code must run in a fresh, isolated container or equivalent sandbox with:
+
+- Network access disabled.
+- CPU, memory, process-count, and execution-time limits.
+- Read-only filesystem where possible.
+- No host filesystem access.
+- No privileged container capabilities.
+- No-new-privileges enabled.
+- Strict input validation and request authentication.
+- A bounded response size and cleanup after execution.
+
+The execution API should expose a contract equivalent to `POST /execute` with a language and code payload, returning language, success state, output, and error information. Secrets must never be exposed to student code.
+
+### 5.7 Assessments and verified skills
+
+- Provide skill-specific assessments.
+- Record attempts, scores, completion time, and status.
+- Combine learning, practical completion, and assessment evidence.
+- Mark skills as verified only when configured verification criteria are met.
+- Display evidence and verification date in the student's skill passport.
+- Prevent self-reported skills from being presented as verified.
+
+### 5.8 AI Career Assistant
+
+The assistant shall use permitted student context, including profile, target role, gaps, roadmap, tasks, assessment results, verified skills, and projects, to answer questions such as:
+
+- What should I learn today?
+- Why do I have this skill gap?
+- Am I ready for a Data Analyst internship?
+- Explain a technical concept.
+- Suggest a project for my current skills.
+- How can I improve my resume?
+
+Requirements:
+
+- Clearly distinguish recommendations from authoritative assessment results.
+- Avoid inventing credentials, scores, job listings, or company requirements.
+- Respect role and data-access boundaries.
+- Provide a useful fallback when AI services are unavailable.
+- Log failures and protect prompts and personal data.
+
+### 5.9 Skill Passport
+
+The skill passport shall present:
+
+- Verified skills and proficiency levels.
+- Assessment scores and practical evidence.
+- Projects and relevant certifications.
+- Verification dates and, where applicable, issuing institution.
+- A shareable or recruiter-viewable representation controlled by the student.
+
+### 5.10 ATS Resume Builder
+
+The system shall generate an ATS-friendly resume from:
+
+- Student profile and education.
+- Skills and verified skills.
+- Projects, internships, certifications, and achievements.
+- Target role and relevant roadmap accomplishments.
+
+The resume must use readable structure, standard headings, selectable text, and role-relevant keywords without fabricating experience. Students shall be able to preview, edit, and export the result.
+
+### 5.11 Internship and placement matching
+
+The matching system shall consider:
+
+- Required and preferred skills.
+- Verified skill evidence and proficiency.
+- Education and graduation status.
+- Projects and career goal.
+- Location, work mode, and eligibility constraints where available.
+
+Students shall be able to view opportunities, review fit indicators, and manage applications. Companies shall be able to review applicants and update application status. The platform should retain an auditable application history.
+
+### 5.12 College dashboard
+
+College users shall be able to view authorized aggregate and student-level information, including:
+
+- Student participation and progress.
+- Common industry skill gaps.
+- Skill and assessment analytics.
+- Internship readiness.
+- Verified-skill distribution.
+- Placement and application statistics.
+
+Student-level data must be limited to authorized institution members and protected from unauthorized disclosure.
+
+### 5.13 Company dashboard
+
+Company users shall be able to:
+
+- Create and manage internship opportunities.
+- Define required skills and eligibility criteria.
+- Search and filter candidates.
+- Review verified skills and skill passports.
+- Shortlist candidates.
+- Manage applications and statuses.
+- Contact candidates through approved platform workflows.
+
+Companies must not see private student data that is not required for recruitment or explicitly shared.
+
+---
+
+## 6. Core User Journeys
+
+### 6.1 Student readiness journey
+
+1. Student signs in and selects the student role.
+2. Student completes academic and career profile.
+3. Student selects a target career or role.
+4. Platform calculates skill gaps.
+5. Student reviews and starts a personalized roadmap.
+6. Student completes resources and smart tasks.
+7. Student practices in SQL or Python labs.
+8. Student completes assessments.
+9. Platform issues verified skill evidence when criteria are met.
+10. Student reviews the skill passport and generates an ATS resume.
+11. Student discovers and applies to matching internships.
+12. Student and authorized college/company users track progress and outcomes.
+
+### 6.2 Company hiring journey
+
+1. Recruiter signs in as a company user.
+2. Recruiter creates an internship opportunity.
+3. Recruiter defines required skills and eligibility.
+4. Platform ranks or filters matching candidates.
+5. Recruiter reviews verified evidence and shared profiles.
+6. Recruiter shortlists candidates.
+7. Recruiter updates application outcomes.
+
+### 6.3 College monitoring journey
+
+1. Faculty or administrator signs in as a college user.
+2. Platform identifies the authorized institution.
+3. User reviews aggregate readiness and skill-gap analytics.
+4. User drills into authorized cohorts or students.
+5. User uses insights to plan interventions and track placement outcomes.
+
+---
+
+## 7. Functional Requirements
+
+| ID | Requirement | Priority |
+|---|---|---|
+| FR-001 | Users can authenticate and maintain a role-aware session. | Must |
+| FR-002 | Users can create and update profiles appropriate to their role. | Must |
+| FR-003 | Students can select a target role and see a skill-gap analysis. | Must |
+| FR-004 | Students can access a personalized roadmap and actionable tasks. | Must |
+| FR-005 | Students can consume learning resources and track completion. | Must |
+| FR-006 | Students can execute SQL and Python practice safely in-browser. | Must |
+| FR-007 | The system records practical attempts and assessment results. | Must |
+| FR-008 | The system awards verified skills according to explicit criteria. | Must |
+| FR-009 | Students can view a skill passport and generate an ATS resume. | Must |
+| FR-010 | Students can discover and apply to relevant internships. | Should |
+| FR-011 | Companies can create opportunities and manage applicants. | Should |
+| FR-012 | Colleges can view authorized analytics and readiness metrics. | Should |
+| FR-013 | The AI assistant provides contextual learning and career guidance. | Should |
+| FR-014 | Administrators can manage configuration, content, and operational issues. | Could |
+
+---
+
+## 8. Non-Functional Requirements
+
+### Security and privacy
+
+- Enforce authentication and role-based authorization on every protected operation.
+- Apply row-level or equivalent data access controls for user-owned and institution-owned data.
+- Store secrets only in managed environment configuration.
+- Validate and sanitize all user input.
+- Protect against SQL injection, XSS, CSRF, broken access control, and insecure direct object references.
+- Rate-limit authentication, AI, matching, and execution endpoints.
+- Encrypt data in transit and use encrypted storage where supported.
+- Maintain audit logs for sensitive actions.
+- Provide account-data deletion and correction workflows consistent with applicable policy.
+
+### Performance and reliability
+
+- Student dashboard initial load target: under 3 seconds on a typical broadband connection.
+- Normal API requests target p95 latency under 500 ms, excluding AI and code execution.
+- Practical execution requests must have a hard timeout and return a controlled error.
+- A failed execution or AI provider must not corrupt progress, assessment, or profile data.
+- Database writes that affect progress and verification must be transactional.
+
+### Accessibility and usability
+
+- Meet WCAG 2.1 AA goals for core workflows.
+- Support keyboard navigation, visible focus, readable contrast, and accessible form errors.
+- Use responsive layouts for desktop, tablet, and mobile widths.
+- Explain technical errors in language useful to students.
+
+### Observability
+
+- Record structured logs, request IDs, execution status, and error categories.
+- Monitor authentication, database, AI, matching, and execution-service health.
+- Do not log passwords, OTPs, tokens, source-code secrets, or unnecessary personal data.
+
+---
+
+## 9. Data Model and Integrations
+
+The current implementation uses a React/TypeScript frontend with Supabase integration and PostgreSQL-backed migrations. The product data model should include, at minimum:
+
+- Users, profiles, roles, and institutions.
+- Student education, goals, skills, and preferences.
+- Roles, industry skill requirements, and skill taxonomy.
+- Skill gaps, roadmaps, roadmap steps, resources, and tasks.
+- Practical exercises, attempts, submissions, and execution results.
+- Assessments, questions, attempts, scores, and verification records.
+- Skill passports and resume versions.
+- Projects, certifications, internships, and achievements.
+- Companies, opportunities, applications, and shortlist statuses.
+- College cohorts, analytics, and placement outcomes.
+- Audit events and system configuration.
+
+Expected integrations include:
+
+- Supabase authentication, database, and edge functions.
+- PostgreSQL for application and practice data.
+- Docker-based execution service for isolated Python and SQL practice.
+- AI provider for roadmap and career-assistant capabilities.
+- Optional resource providers such as video or learning-content APIs.
+- Optional email, SMS, or notification provider for alerts and OTP delivery.
+
+---
+
+## 10. Technical Constraints
+
+- Frontend stack: React 18, TypeScript, Vite, Tailwind CSS, and Lucide icons.
+- Backend/data services: Supabase and PostgreSQL.
+- Practical execution: isolated Docker-based services for Python and SQL.
+- The frontend must remain usable when optional integrations are unavailable.
+- Execution-service credentials and Supabase secrets must be supplied through deployment secrets, never committed to the repository.
+- New features must preserve type checking, linting, and production build success.
+
+Required checks before release:
+
+```text
+npm run typecheck
+npm run lint
+npm run build
+```
+
+---
+
+## 11. MVP Definition
+
+The MVP is complete when:
+
+1. A student can authenticate, complete a profile, select a target role, and view skill gaps.
+2. A student can follow a roadmap with resources and task progress.
+3. SQL and Python labs execute safely with clear output and error handling.
+4. Assessments record results and produce verified skills using documented rules.
+5. A student can view a skill passport and export an ATS-friendly resume.
+6. A company can create an internship opportunity and review matching candidates.
+7. A college can view authorized aggregate readiness analytics.
+8. Core data access is role-protected and sensitive execution paths are hardened.
+9. The application passes typecheck, lint, and production build checks.
+10. Deployment and operational documentation exists for Supabase and the execution service.
+
+Out of MVP scope unless specifically prioritized:
+
+- Java, C++, or JavaScript execution environments.
+- Full mobile-native applications.
+- Automated real-world placement guarantees.
+- Unmoderated external company integrations.
+- Advanced interview simulation and large-scale certification proctoring.
+
+---
+
+## 12. Release Plan
+
+### Phase 1: Foundation
+
+- Authentication, roles, profile, institution association, and access control.
+- Core skill taxonomy and target-role requirements.
+- Student, college, and company dashboard shells.
+
+### Phase 2: Student learning loop
+
+- Skill-gap analysis.
+- Roadmaps, resources, tasks, and progress persistence.
+- Initial AI-assisted recommendations with safe fallbacks.
+
+### Phase 3: Practical proof
+
+- Production-hardened SQL and Python execution.
+- Practical exercises, submissions, assessments, and verification.
+- Skill passport and evidence views.
+
+### Phase 4: Career connection
+
+- ATS resume builder.
+- Internship opportunity management and matching.
+- Applications, shortlists, and outcome tracking.
+
+### Phase 5: Scale and optimization
+
+- Expanded learning environments.
+- Better recommendations and analytics.
+- Notifications, reporting, integrations, and mobile experience.
+
+---
+
+## 13. Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Unsafe student code escapes the sandbox | Critical | Defense-in-depth container isolation, no network, strict limits, regular security testing, separate execution host. |
+| AI produces inaccurate career guidance | High | Ground responses in product data, show uncertainty, use deterministic eligibility and verification rules, provide feedback/reporting. |
+| Skill requirements become outdated | High | Version skill taxonomies, allow authorized industry updates, review requirements periodically. |
+| Students abandon long roadmaps | Medium | Small tasks, progress milestones, reminders, adaptive effort estimates, clear next actions. |
+| Company data or student profiles are overexposed | Critical | Least-privilege access, row-level policies, explicit sharing controls, audit logs, privacy reviews. |
+| Execution service becomes unavailable | High | Health checks, queue or retry policy, graceful fallback, status visibility, isolated service scaling. |
+| Matching unfairly favors or excludes groups | High | Explainable criteria, human review, bias monitoring, avoid using protected attributes for ranking. |
+| Resume contains fabricated claims | High | Build from stored evidence, label self-reported vs verified data, require student confirmation before export. |
+
+---
+
+## 14. Open Questions
+
+1. Which AI provider and model are approved for production use?
+2. What exact thresholds qualify a skill as verified?
+3. Which target roles and skill taxonomies are included in the first release?
+4. What institutions and companies are allowed to access student records?
+5. Which legal/privacy requirements apply to student and recruitment data?
+6. What resume export formats are required: PDF, DOCX, or both?
+7. What notification channels are required for OTPs, task reminders, and application updates?
+8. Will practical execution be hosted by the project team or a managed sandbox provider?
+9. How are learning resources reviewed, versioned, and removed when unavailable?
+10. What is the expected launch cohort and peak concurrent execution load?
+
+---
+
+## 15. Definition of Done
+
+A feature is considered done when:
+
+- Its user story and acceptance criteria are documented.
+- Authorized and unauthorized access paths are tested.
+- Loading, empty, success, and failure states are implemented.
+- Data mutations are validated and safely persisted.
+- Mobile and keyboard interactions are reviewed.
+- Typecheck, lint, and build pass.
+- Relevant audit and error logging is present.
+- Documentation and environment variables are updated.
+- The feature has been tested with representative student, college, and company accounts.
+
+---
+
+## 16. Product Summary
+
+The Academia–Industry Collaboration Portal is a role-based employability platform that transforms academic learning into demonstrable, industry-relevant outcomes. Its differentiator is the connected loop from skill-gap discovery to guided learning, isolated practical work, verified evidence, resume creation, and opportunity matching.
